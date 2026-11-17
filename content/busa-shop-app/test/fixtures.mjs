@@ -1,0 +1,300 @@
+// Workspace state for tests and the local preview, built from the template's
+// own demo files: the toy list in assets/demo, as scripts/import-products.mjs
+// writes it, and the Settings row this template installs. Two workspaces:
+// a shop with its own Products and Certificates (busa-shop 0.5.0 and later,
+// `source: "shop"`), and a shop installed before 0.5.0 that sells from
+// busa-product-hub (`source: "product-hub"`, the default here).
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { parseCsv, planCertificates, planProducts, productFields, shopProductFields } from "../../../scripts/import-products.mjs";
+
+const templateRoot = fileURLToPath(new URL("../../../", import.meta.url));
+export const DEMO_DIR = `${templateRoot}assets/demo/`;
+
+const readNdjson = async (path) =>
+  (await readFile(path, "utf8"))
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+
+export const sampleSettingsFields = async () =>
+  (await readNdjson(`${templateRoot}content/settings/records.ndjson`))[0].fields;
+
+/** A product row the way busa-product-hub stores one (its own sample lamp uses this). */
+const productRecordFields = (product, ref) => ({
+  "product-id": product.product_id,
+  ref,
+  sku: product.sku,
+  name: product.name,
+  subtitle: product.subtitle,
+  category: product.category,
+  lifecycle: product.lifecycle,
+  status: product.status,
+  owner: "",
+  vendor: product.vendor,
+  "launch-date": "",
+  image: product.image,
+  gallery: JSON.stringify(product.gallery),
+  tags: JSON.stringify(product.tags),
+  pricing: JSON.stringify(product.pricing),
+  inventory: JSON.stringify(product.inventory),
+  content: JSON.stringify(product.content),
+  compliance: JSON.stringify(product.compliance),
+  "created-at": "2026-11-01T08:00:00.000Z",
+  "updated-at": "2026-11-02T08:00:00.000Z",
+  ...(product.price === undefined ? {} : { price: product.price, currency: product.currency }),
+});
+
+export const NODES = {
+  products: {
+    id: "nod_hub_products",
+    type: "base",
+    slug: "busa-product-hub-products",
+    parentId: "nod_hub",
+    baseId: "bas_products",
+    metadata: { appId: "busa-product-hub", resourceKey: "products", schemaVersion: 1 },
+  },
+  certificates: {
+    id: "nod_hub_certificates",
+    type: "base",
+    slug: "busa-product-hub-certificates",
+    parentId: "nod_hub",
+    baseId: "bas_certificates",
+    metadata: { appId: "busa-product-hub", resourceKey: "certificates", schemaVersion: 1 },
+  },
+  hubApp: {
+    id: "nod_hub_app",
+    type: "airapp",
+    slug: "busa-product-hub-app",
+    parentId: "nod_hub",
+    baseId: null,
+    metadata: { appId: "busa-product-hub", resourceKey: "busa-product-hub-app", schemaVersion: 1, version: "3" },
+  },
+  settings: {
+    id: "nod_shop_settings",
+    type: "base",
+    slug: "busa-shop-settings",
+    parentId: "nod_shop",
+    baseId: "bas_settings",
+    metadata: { appId: "busa-shop", resourceKey: "settings", schemaVersion: 1 },
+  },
+  orders: {
+    id: "nod_shop_orders",
+    type: "base",
+    slug: "busa-shop-orders",
+    parentId: "nod_shop",
+    baseId: "bas_orders",
+    metadata: { appId: "busa-shop", resourceKey: "orders", schemaVersion: 1 },
+  },
+  reports: {
+    id: "nod_shop_reports",
+    type: "base",
+    slug: "busa-shop-reports",
+    parentId: "nod_shop",
+    baseId: "bas_reports",
+    metadata: { appId: "busa-shop", resourceKey: "reports", schemaVersion: 1 },
+  },
+  unrelated: {
+    id: "nod_crm_contacts",
+    type: "base",
+    slug: "crm-contacts",
+    parentId: "nod_crm",
+    baseId: "bas_crm",
+    metadata: { appId: "busa-crm", resourceKey: "contacts", schemaVersion: 1 },
+  },
+};
+
+/** The Products and Certificates a busa-shop 0.5.0+ install adds to its own folder, next to Settings. */
+export const SHOP_NODES = {
+  products: {
+    id: "nod_shop_products",
+    type: "base",
+    slug: "busa-shop-products",
+    parentId: "nod_shop",
+    baseId: "bas_shop_products",
+    metadata: { appId: "busa-shop", resourceKey: "products", schemaVersion: 2 },
+  },
+  certificates: {
+    id: "nod_shop_certificates",
+    type: "base",
+    slug: "busa-shop-certificates",
+    parentId: "nod_shop",
+    baseId: "bas_shop_certificates",
+    metadata: { appId: "busa-shop", resourceKey: "certificates", schemaVersion: 2 },
+  },
+};
+
+/** The Shipping and Pages a busa-shop 0.6.0+ install adds to its folder. */
+export const CHECKOUT_NODES = {
+  shipping: {
+    id: "nod_shop_shipping",
+    type: "base",
+    slug: "busa-shop-shipping",
+    parentId: "nod_shop",
+    baseId: "bas_shipping",
+    metadata: { appId: "busa-shop", resourceKey: "shipping", schemaVersion: 4 },
+  },
+  pages: {
+    id: "nod_shop_pages",
+    type: "base",
+    slug: "busa-shop-pages",
+    parentId: "nod_shop",
+    baseId: "bas_pages",
+    metadata: { appId: "busa-shop", resourceKey: "pages", schemaVersion: 4 },
+  },
+};
+
+/** The Posts a busa-shop 0.7.0+ install adds to its folder. */
+export const BLOG_NODES = {
+  posts: {
+    id: "nod_shop_posts",
+    type: "base",
+    slug: "busa-shop-posts",
+    parentId: "nod_shop",
+    baseId: "bas_posts",
+    metadata: { appId: "busa-shop", resourceKey: "posts", schemaVersion: 5 },
+  },
+};
+
+/** The Shop Website's own AirApp node: the app buyers sign in to (busa-shop 0.10.0 buyer login). */
+export const SHOP_APP_NODE = {
+  id: "nod_shop_app",
+  type: "airapp",
+  slug: "busa-shop-app",
+  parentId: "nod_shop",
+  baseId: null,
+  metadata: { appId: "busa-shop", resourceKey: "busa-shop-app", schemaVersion: 5 },
+};
+
+export const sampleRows = async (name) =>
+  (await readNdjson(`${templateRoot}content/${name}/records.ndjson`)).map((row, index) => ({ id: `rec_${name}_${index + 1}`, fields: row.fields }));
+
+/** A workspace with only Busa Shop (0.5.0+) installed: no product hub anywhere. */
+export const SHOP_ONLY_NODES = [...Object.values(NODES).filter((node) => node.metadata.appId !== "busa-product-hub"), ...Object.values(SHOP_NODES)];
+
+/**
+ * The demo workspace after the lesson's import: the 12 toys (images uploaded
+ * as assets on the Busabase server, so they need the key). `source: "shop"`:
+ * in the shop's own Products. `source: "product-hub"`: a shop from before
+ * 0.5.0, selling from busa-product-hub, with the hub's own sample lamp
+ * archived; `priceColumn: false` is a product hub installed before 0.4.0:
+ * prices in the Pricing JSON.
+ */
+/** One picture as the importer passes it on: its link, and the attachment its upload made (busa-shop 0.9.0 and later). */
+export const photo = (file, url) => ({
+  file,
+  sha256: "",
+  url,
+  attachment: { assetId: `ast_${file}`, attachmentId: `att_${file}`, url, fileName: file, mimeType: "image/svg+xml", size: 1024 },
+});
+
+export const demoState = async ({ imageUrl, priceColumn = true, source = "product-hub", checkout = source === "shop", blog = false }) => {
+  const planned = planProducts(parseCsv(await readFile(`${DEMO_DIR}toy-catalog.csv`, "utf8"))).products;
+  const certificates = planCertificates(
+    parseCsv(await readFile(`${DEMO_DIR}toy-certificates.csv`, "utf8")),
+    new Set(planned.map((product) => product.productId)),
+  ).certificates;
+  const assets = Object.fromEntries(
+    planned.flatMap((product) => product.imageRefs).map((file) => [file, { type: "image/svg+xml", path: `${DEMO_DIR}images/${file}` }]),
+  );
+  const settings = [{ id: "rec_settings", fields: await sampleSettingsFields() }];
+  if (source === "shop") {
+    // The shop's own tables, as the importer writes them: plain columns, no JSON.
+    return {
+      nodes: [...SHOP_ONLY_NODES, ...(checkout ? Object.values(CHECKOUT_NODES) : []), ...(blog ? Object.values(BLOG_NODES) : [])],
+      records: {
+        ...(checkout ? { bas_shipping: await sampleRows("shipping"), bas_pages: await sampleRows("pages") } : {}),
+        ...(blog ? { bas_posts: await sampleRows("posts") } : {}),
+        bas_shop_products: planned.map((product, index) => ({
+          id: `rec_${product.productId}`,
+          fields: {
+            ...shopProductFields(product, {}, product.imageRefs.length ? product.imageRefs.map((file) => photo(file, imageUrl(file))) : null),
+            ref: index + 1,
+          },
+        })),
+        bas_shop_certificates: certificates.map((certificate, index) => ({
+          id: `rec_cert_${index + 1}`,
+          fields: {
+            product: [`rec_${certificate.productId}`],
+            "cert-type": certificate.type,
+            issuer: certificate.issuer,
+            "cert-number": certificate.number,
+            "issued-date": certificate.issued,
+            "expiry-date": certificate.expiry,
+            "source-note": `toy-certificates.csv line ${certificate.line}`,
+          },
+        })),
+        bas_settings: settings,
+        bas_orders: [],
+        bas_reports: [],
+      },
+      files: {},
+      assets,
+    };
+  }
+  const productRecords = [
+    {
+      id: "rec_hub_lamp",
+      fields: productRecordFields(
+        {
+          product_id: "prod-aurora-lamp",
+          sku: "AUR-LAMP-01",
+          name: "Aurora Desk Lamp",
+          subtitle: "Adjustable ambient light for focused work",
+          category: "Home office",
+          lifecycle: "archive",
+          status: "active",
+          vendor: "Northstar Lighting",
+          image: "./assets/product-images/aurora-lamp.png",
+          gallery: ["./assets/product-images/aurora-lamp.png"],
+          tags: ["lighting"],
+          price: 79,
+          currency: "USD",
+          pricing: { landed_cost: 28 },
+          inventory: { available: 210 },
+          content: {},
+          compliance: {},
+        },
+        1,
+      ),
+    },
+    ...planned.map((product, index) => ({
+      id: `rec_${product.productId}`,
+      fields: {
+        ...productFields(
+          product,
+          {},
+          product.imageRefs.length ? product.imageRefs.map((file) => ({ file, sha256: "", url: imageUrl(file) })) : null,
+          { priceColumn },
+        ),
+        ref: index + 2,
+        "created-at": "2026-11-01T08:00:00.000Z",
+        "updated-at": "2026-11-02T08:00:00.000Z",
+      },
+    })),
+  ];
+  const certificateRecords = certificates.map((certificate, index) => ({
+    id: `rec_cert_${index + 1}`,
+    fields: {
+      product: [`rec_${certificate.productId}`],
+      "cert-type": certificate.type,
+      issuer: certificate.issuer,
+      "cert-number": certificate.number,
+      "issued-date": certificate.issued,
+      "expiry-date": certificate.expiry,
+      "source-note": `toy-certificates.csv line ${certificate.line}`,
+    },
+  }));
+  return {
+    nodes: Object.values(NODES),
+    records: {
+      bas_products: productRecords,
+      bas_certificates: certificateRecords,
+      bas_settings: settings,
+      bas_orders: [],
+      bas_reports: [],
+    },
+    files: {},
+    assets,
+  };
+};

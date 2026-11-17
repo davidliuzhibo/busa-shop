@@ -1,0 +1,60 @@
+{
+  "name": "Busa Shop",
+  "description": "A one-install online shop for a small cross-border seller. Products and Certificates hold the product list in plain columns you edit in the table (no separate product hub needed); the public website (Shop Website) lists what is on sale and has a real checkout: delivery address, shipping by country from Shipping, and payment with PayPal (or order requests when PayPal is off), with order emails over SMTP and policy pages from Pages. Posts is the shop's blog: drafts the Agent writes from the shop's own facts and the owner publishes, on /blog, in the sitemap, the feed and /llms.txt. On the live address the website is also an MCP server (/mcp) that AI assistants such as Claude and ChatGPT add as a connector to search the catalog and hand buyers a link to its own checkout. Orders follows each order from payment to shipping; Settings holds the texts and the non-secret setup (secrets go in the Space Vault); the daily shop check writes its findings into Reports.",
+  "agentPrompts": [
+    {
+      "key": "import-catalog",
+      "label": {
+        "en": "Put products in the shop (import a product list)",
+        "zh-CN": "把商品放进店（导入商品表）"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Manage products (商品管理)\", \"Bring products in, any way\": run its `scripts/import-products.mjs` on the Excel or CSV file (and photos) I give you, with `--dry-run` first, show me the preview, then run it for real once I say yes. If I also ask you to take old products down, list them in the same preview and set them off sale after my yes. Never invent a value the list does not contain."
+    },
+    {
+      "key": "manage-products",
+      "label": {
+        "en": "Manage my products: change a price, put on sale or take off sale",
+        "zh-CN": "商品管理：改价格、上架、下架"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Manage products (商品管理)\" for what I ask: change a price I give you, put products on sale (上架) or take them off sale (下架). Show me the exact change first (Product ID, name, the old and new value), write it after I say yes with a message saying I asked, and read the Products table back."
+    },
+    {
+      "key": "open-shop",
+      "label": {
+        "en": "Open my shop",
+        "zh-CN": "开店：上线前要做什么"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Open the shop\": check the Products it will sell from, the settings, shipping costs, policy pages, payments (PayPal, Vault) and order emails, and the members-only preview, and tell me exactly what I still have to do before I click Go live."
+    },
+    {
+      "key": "daily-check",
+      "label": "Run today's shop check",
+      "body": "Read the `busa-shop` skill in this folder and follow its \"Daily shop check\": apply my feedback on the previous report first, then check products, certificates, orders and the live site, and write one new report."
+    },
+    {
+      "key": "write-blog-posts",
+      "label": {
+        "en": "Write blog posts buyers search for (SEO, GEO)",
+        "zh-CN": "写博客文章（SEO、让 AI 引用）"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Blog posts and landing content (博客文章)\": plan the posts I ask for (three if I do not say) that answer questions buyers in the countries this shop ships to really ask, show me the plan with the facts each post uses and where they come from, and after I pick one write it as a Draft in Posts. Never publish it yourself, never promise free shipping or a warranty my tables do not give, and tell me how I publish it."
+    },
+    {
+      "key": "connect-ai-assistants",
+      "label": {
+        "en": "Let AI assistants sell for me (MCP for Claude, ChatGPT)",
+        "zh-CN": "让 AI 助手帮我卖货（Agent 电商：MCP 接入 Claude、ChatGPT）"
+      },
+      "intent": "read-only",
+      "body": "Read the `busa-shop` skill in this folder and follow \"Agent commerce (AI assistants find and sell your products, Agent 电商)\": tell me my MCP address (Settings › Live site address plus /mcp; if the shop is not live yet, say what Go live needs) and the exact steps to add it to Claude or ChatGPT. Then check it with the MCP Inspector commands in that section: list the tools, search for one of my products with a country I ship to, make the buy link and open it, and tell me what a buyer would see. Change nothing in my tables."
+    },
+    {
+      "key": "new-orders",
+      "label": {
+        "en": "Handle orders: what to ship, what is waiting",
+        "zh-CN": "处理订单：发货、待付款、订单请求"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Payments and orders (收款与订单)\": list the paid orders to ship, the orders awaiting payment and any payment problem, and for every order request still new follow \"Handle a new order request\" (draft the replies for me). Do not email anyone, do not refund, and never mark an order paid or shipped yourself."
+    }
+  ]
+}

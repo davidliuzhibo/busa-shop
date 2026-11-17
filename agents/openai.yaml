@@ -1,0 +1,4 @@
+interface:
+  display_name: "Busa Shop"
+  short_description: "One-install online shop with its own product list, order requests and a self-improving daily shop check"
+  default_prompt: "Use $busa-shop to open my shop: import my product list, then tell me what I still have to do before I click Go live."

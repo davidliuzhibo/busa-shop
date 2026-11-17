@@ -1,0 +1,575 @@
+{
+  "name": "Settings",
+  "description": "One row, the shop's settings. Each view shows one group (Store, Payments, Order emails, Google, Products and daily check; All settings has every column), and each column's help says what it is for. It holds what the shop website shows (store name, tagline, currency, contact, language, ship-to countries), how it takes payment (PayPal off / sandbox / live, the PayPal client ID and webhook ID) and sends email (SMTP host, port, security, username, sender, where order notifications go), and what the daily shop check uses (required certificates, expiry warning, standing check rules). Never write a password or a secret here: the PayPal client secret and the SMTP password go in the Space Vault (BUSA_SHOP_PAYPAL_CLIENT_SECRET, BUSA_SHOP_SMTP_PASSWORD, marked Runtime). Products table is empty to sell from this folder's Products; write a Busa Product Hub Products table's slug there to sell from it instead. For Google: Google Analytics 4 measurement ID (G-…, loaded only on the public site, never in a preview), and the Google Search Console and Bing verification codes (the content value of their HTML tag; pasting the whole tag works too), all optional. The website reads it on every refresh, so a change here shows on the live site within about a minute, without a redeploy.",
+  "position": 6,
+  "agentPrompts": [
+    {
+      "key": "show-settings",
+      "label": "What does my shop show right now?",
+      "body": "Read the `busa-shop` skill in this folder, then tell me the store name, tagline, currency, contact email, language and ship-to countries on record, whether the demo notice is still on, and which Products table the shop is selling from (its own, or the one Settings › Products table names).",
+      "intent": "read-only"
+    },
+    {
+      "key": "update-store-info",
+      "label": "Change the store name, tagline or contact",
+      "body": "Read the `busa-shop` skill in this folder, then update the store name, tagline, contact email, about text or shipping note I give you on the one Settings row. Tell me it shows on the live site within about a minute, with no redeploy."
+    },
+    {
+      "key": "prepare-go-live",
+      "label": "Get the shop ready to go live",
+      "body": "Read the `busa-shop` skill in this folder and follow \"Open the shop\": check the Products it sells from, the currency, contact email, ship-to countries and demo notice, and tell me exactly what I still have to do before I click Go live."
+    },
+    {
+      "key": "set-up-payments",
+      "label": {
+        "en": "Set up PayPal payments",
+        "zh-CN": "设置 PayPal 收款"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Payments and orders (收款与订单)\", \"Set up PayPal\": tell me step by step what to create in my PayPal developer account, which values go into Settings (PayPal, client ID, webhook ID) and which one I put into the Space Vault myself (the client secret), then check with /api/status that the shop says PayPal is ready. Never ask me to paste the secret into the chat or a table, and never switch to live unless I tell you to."
+    },
+    {
+      "key": "set-up-email",
+      "label": {
+        "en": "Set up order emails (SMTP)",
+        "zh-CN": "设置订单邮件（SMTP）"
+      },
+      "body": "Read the `busa-shop` skill in this folder and follow \"Payments and orders (收款与订单)\", \"Order emails (邮件, SMTP)\": ask me for my mail provider's SMTP host, port and username and the sender address, write them into Settings after I say yes, tell me to put the SMTP password into the Space Vault myself, and explain how to check that the emails arrive. Never ask me for the password."
+    }
+  ],
+  "fields": [
+    {
+      "slug": "store-name",
+      "name": "Store name",
+      "type": "text",
+      "required": true,
+      "position": 0,
+      "options": {
+        "help": {
+          "description": "The shop's name, at the top of every page, in the browser tab and in order emails.",
+          "example": "Tumbleberry Toys"
+        }
+      }
+    },
+    {
+      "slug": "tagline",
+      "name": "Tagline",
+      "type": "text",
+      "required": false,
+      "position": 1,
+      "options": {
+        "help": {
+          "description": "One line under the store name on the home page.",
+          "example": "Colourful, tested toys from our own factory floor"
+        }
+      }
+    },
+    {
+      "slug": "currency",
+      "name": "Currency",
+      "type": "text",
+      "required": true,
+      "position": 2,
+      "options": {
+        "help": {
+          "description": "Three letters: the currency the shop sells in. Only products in this currency are listed; a product with an empty Currency sells in this one.",
+          "example": "USD"
+        }
+      }
+    },
+    {
+      "slug": "contact-email",
+      "name": "Contact email",
+      "type": "email",
+      "required": false,
+      "position": 3,
+      "options": {
+        "help": {
+          "description": "Shown in the footer and in error messages, and where order notifications go when \"Order notifications to\" is empty. Use a real inbox before going live.",
+          "example": "hello@yourshop.com"
+        }
+      }
+    },
+    {
+      "slug": "language",
+      "name": "Language",
+      "type": "select",
+      "required": false,
+      "position": 4,
+      "options": {
+        "choices": [
+          {
+            "id": "en",
+            "name": "English"
+          },
+          {
+            "id": "de",
+            "name": "Deutsch"
+          },
+          {
+            "id": "fr",
+            "name": "Français"
+          },
+          {
+            "id": "es",
+            "name": "Español"
+          }
+        ],
+        "help": {
+          "description": "The website's own words (buttons, checkout, emails): English, Deutsch, Français or Español. Product texts stay as you wrote them.",
+          "example": "English"
+        }
+      }
+    },
+    {
+      "slug": "ships-to",
+      "name": "Ships to (country codes)",
+      "type": "text",
+      "required": false,
+      "position": 5,
+      "options": {
+        "help": {
+          "description": "Country codes, separated by commas. Checkout offers only these countries (and only those with a row in Shipping). Empty means every country.",
+          "example": "US, CA, GB, DE, FR"
+        }
+      }
+    },
+    {
+      "slug": "about",
+      "name": "About the store",
+      "type": "longtext",
+      "required": false,
+      "position": 6,
+      "options": {
+        "help": {
+          "description": "A few sentences about your business on the About part of the home page: where you make your products, who they are for, how to reach you."
+        }
+      }
+    },
+    {
+      "slug": "shipping-note",
+      "name": "Shipping note",
+      "type": "longtext",
+      "required": false,
+      "position": 7,
+      "options": {
+        "help": {
+          "description": "A short note shown at checkout and on the shipping policy page: when you ship, from where.",
+          "example": "We ship within 5 working days after payment."
+        }
+      }
+    },
+    {
+      "slug": "demo-notice",
+      "name": "Show the demo-store notice",
+      "type": "checkbox",
+      "required": false,
+      "position": 8,
+      "options": {
+        "help": {
+          "description": "The yellow \"this is a demo store\" bar on every page. Untick it before your shop is real."
+        }
+      }
+    },
+    {
+      "slug": "listed-tag",
+      "name": "Only list products with this tag",
+      "type": "text",
+      "required": false,
+      "position": 9,
+      "options": {
+        "help": {
+          "description": "Optional. When filled, the website lists only products whose Tags contain this word. Empty lists every product on sale.",
+          "example": "website"
+        }
+      }
+    },
+    {
+      "slug": "products-base",
+      "name": "Products table (optional: sell from another table)",
+      "type": "text",
+      "required": false,
+      "position": 10,
+      "options": {
+        "help": {
+          "description": "Optional. Leave empty to sell from this folder's Products. Write the slug of a Busa Product Hub Products table to sell from that table instead.",
+          "example": "busa-product-hub-products"
+        }
+      }
+    },
+    {
+      "slug": "site-url",
+      "name": "Live site address",
+      "type": "url",
+      "required": false,
+      "position": 11,
+      "options": {
+        "help": {
+          "description": "The public address shown after Go live (or your own domain). The daily shop check opens it, and your MCP address for AI assistants is this plus /mcp.",
+          "example": "https://shop.yourcompany.com"
+        }
+      }
+    },
+    {
+      "slug": "required-certificates",
+      "name": "Required certificates",
+      "type": "text",
+      "required": false,
+      "position": 12,
+      "options": {
+        "help": {
+          "description": "For the daily shop check: the certificate types every product on sale must have, separated by commas.",
+          "example": "EN 71, ASTM F963, CPSIA / CPC"
+        }
+      }
+    },
+    {
+      "slug": "expiry-warning-days",
+      "name": "Certificate expiry warning (days)",
+      "type": "number",
+      "required": false,
+      "position": 13,
+      "options": {
+        "help": {
+          "description": "For the daily shop check: warn this many days before a certificate expires.",
+          "example": "90"
+        }
+      }
+    },
+    {
+      "slug": "check-rules",
+      "name": "Standing check rules",
+      "type": "longtext",
+      "required": false,
+      "position": 14,
+      "options": {
+        "help": {
+          "description": "Rules your agent adds to the daily shop check from your feedback, one per line, newest last.",
+          "example": "Also check that every toy for under-3s says so in its Specs."
+        }
+      }
+    },
+    {
+      "slug": "show-details",
+      "name": "Also show these product details",
+      "type": "text",
+      "required": false,
+      "position": 15,
+      "options": {
+        "help": {
+          "description": "Only when you sell from a product hub table: more of its product details to show on the product page, separated by commas. The shop's own table needs none: its Specs column is the list.",
+          "example": "防水等级, gtin"
+        }
+      }
+    },
+    {
+      "slug": "paypal-mode",
+      "name": "PayPal",
+      "type": "select",
+      "required": false,
+      "position": 16,
+      "options": {
+        "choices": [
+          {
+            "id": "off",
+            "name": "Off: order requests only"
+          },
+          {
+            "id": "sandbox",
+            "name": "Sandbox (test money)"
+          },
+          {
+            "id": "live",
+            "name": "Live (real payments)"
+          }
+        ],
+        "help": {
+          "description": "How buyers pay. Off: they send an order request and you reply. Sandbox: PayPal with test money, to try checkout. Live: real payments. Ask your agent to \"set up PayPal\" first.",
+          "example": "Off: order requests only"
+        }
+      }
+    },
+    {
+      "slug": "paypal-client-id",
+      "name": "PayPal client ID",
+      "type": "text",
+      "required": false,
+      "position": 17,
+      "options": {
+        "help": {
+          "description": "Your PayPal REST app's client ID (sandbox or live, matching PayPal above). Not a secret. The client secret never goes here: it goes in the Space Vault as BUSA_SHOP_PAYPAL_CLIENT_SECRET.",
+          "example": "AYx…"
+        }
+      }
+    },
+    {
+      "slug": "paypal-webhook-id",
+      "name": "PayPal webhook ID",
+      "type": "text",
+      "required": false,
+      "position": 18,
+      "options": {
+        "help": {
+          "description": "The ID PayPal shows for the webhook you register at <your live address>/api/paypal/webhook. The shop checks every payment notice with it.",
+          "example": "8PT…"
+        }
+      }
+    },
+    {
+      "slug": "smtp-host",
+      "name": "SMTP host",
+      "type": "text",
+      "required": false,
+      "position": 19,
+      "options": {
+        "help": {
+          "description": "Your mailbox's outgoing mail server, for order emails. Your mail provider's help page names it.",
+          "example": "smtp.yourmailprovider.com"
+        }
+      }
+    },
+    {
+      "slug": "smtp-port",
+      "name": "SMTP port",
+      "type": "number",
+      "required": false,
+      "position": 20,
+      "options": {
+        "help": {
+          "description": "Usually 465 (with TLS) or 587 (with STARTTLS).",
+          "example": "465"
+        }
+      }
+    },
+    {
+      "slug": "smtp-security",
+      "name": "SMTP security",
+      "type": "select",
+      "required": false,
+      "position": 21,
+      "options": {
+        "choices": [
+          {
+            "id": "starttls",
+            "name": "STARTTLS (usually port 587)"
+          },
+          {
+            "id": "tls",
+            "name": "TLS (usually port 465)"
+          },
+          {
+            "id": "none",
+            "name": "None: only for a local test mail catcher (no password is sent)"
+          }
+        ],
+        "help": {
+          "description": "TLS for port 465, STARTTLS for port 587. None only for a test mail catcher on your own computer.",
+          "example": "TLS (usually port 465)"
+        }
+      }
+    },
+    {
+      "slug": "smtp-username",
+      "name": "SMTP username",
+      "type": "text",
+      "required": false,
+      "position": 22,
+      "options": {
+        "help": {
+          "description": "The mailbox login, usually its full email address. Its password never goes here: it goes in the Space Vault as BUSA_SHOP_SMTP_PASSWORD.",
+          "example": "orders@yourshop.com"
+        }
+      }
+    },
+    {
+      "slug": "email-from",
+      "name": "Send emails from",
+      "type": "email",
+      "required": false,
+      "position": 23,
+      "options": {
+        "help": {
+          "description": "The From address of order emails: the SMTP mailbox, or an alias it may send as. Empty uses the SMTP username.",
+          "example": "orders@yourshop.com"
+        }
+      }
+    },
+    {
+      "slug": "notify-email",
+      "name": "Order notifications to",
+      "type": "email",
+      "required": false,
+      "position": 24,
+      "options": {
+        "help": {
+          "description": "Where \"new paid order\" and \"new order request\" emails go. Empty uses the Contact email.",
+          "example": "you@yourshop.com"
+        }
+      }
+    },
+    {
+      "slug": "ga4-id",
+      "name": "Google Analytics 4 measurement ID",
+      "type": "text",
+      "required": false,
+      "position": 25,
+      "options": {
+        "help": {
+          "description": "Optional. The G-… measurement ID of a Google Analytics 4 web stream for your live address. Only the public site loads it, never a preview. Pasting the whole gtag snippet works too.",
+          "example": "G-ABC123XYZ9"
+        }
+      }
+    },
+    {
+      "slug": "google-site-verification",
+      "name": "Google Search Console verification code",
+      "type": "text",
+      "required": false,
+      "position": 26,
+      "options": {
+        "help": {
+          "description": "Optional. The content value of the HTML tag Google Search Console gives you for your live address (pasting the whole <meta …> tag works too). Every page then carries it."
+        }
+      }
+    },
+    {
+      "slug": "bing-site-verification",
+      "name": "Bing Webmaster Tools verification code",
+      "type": "text",
+      "required": false,
+      "position": 27,
+      "options": {
+        "help": {
+          "description": "Optional. The content value of Bing Webmaster Tools' msvalidate.01 tag, the same way."
+        }
+      }
+    }
+  ],
+  "views": [
+    {
+      "slug": "store",
+      "name": "Store",
+      "type": "table",
+      "config": {
+        "filters": [],
+        "sorts": [],
+        "visibleFieldSlugs": [
+          "store-name",
+          "tagline",
+          "currency",
+          "contact-email",
+          "language",
+          "ships-to",
+          "about",
+          "shipping-note",
+          "demo-notice",
+          "site-url"
+        ]
+      }
+    },
+    {
+      "slug": "payments",
+      "name": "Payments (PayPal)",
+      "type": "table",
+      "config": {
+        "filters": [],
+        "sorts": [],
+        "visibleFieldSlugs": [
+          "store-name",
+          "paypal-mode",
+          "paypal-client-id",
+          "paypal-webhook-id"
+        ]
+      }
+    },
+    {
+      "slug": "order-emails",
+      "name": "Order emails (SMTP)",
+      "type": "table",
+      "config": {
+        "filters": [],
+        "sorts": [],
+        "visibleFieldSlugs": [
+          "store-name",
+          "smtp-host",
+          "smtp-port",
+          "smtp-security",
+          "smtp-username",
+          "email-from",
+          "notify-email"
+        ]
+      }
+    },
+    {
+      "slug": "google",
+      "name": "Google and search",
+      "type": "table",
+      "config": {
+        "filters": [],
+        "sorts": [],
+        "visibleFieldSlugs": [
+          "store-name",
+          "ga4-id",
+          "google-site-verification",
+          "bing-site-verification"
+        ]
+      }
+    },
+    {
+      "slug": "products-and-checks",
+      "name": "Products and daily check",
+      "type": "table",
+      "config": {
+        "filters": [],
+        "sorts": [],
+        "visibleFieldSlugs": [
+          "store-name",
+          "listed-tag",
+          "products-base",
+          "show-details",
+          "required-certificates",
+          "expiry-warning-days",
+          "check-rules"
+        ]
+      }
+    },
+    {
+      "slug": "all-settings",
+      "name": "All settings",
+      "type": "table",
+      "config": {
+        "filters": [],
+        "sorts": [],
+        "visibleFieldSlugs": [
+          "store-name",
+          "tagline",
+          "currency",
+          "contact-email",
+          "language",
+          "ships-to",
+          "about",
+          "shipping-note",
+          "demo-notice",
+          "listed-tag",
+          "products-base",
+          "site-url",
+          "required-certificates",
+          "expiry-warning-days",
+          "check-rules",
+          "show-details",
+          "paypal-mode",
+          "paypal-client-id",
+          "paypal-webhook-id",
+          "smtp-host",
+          "smtp-port",
+          "smtp-security",
+          "smtp-username",
+          "email-from",
+          "notify-email",
+          "ga4-id",
+          "google-site-verification",
+          "bing-site-verification"
+        ]
+      }
+    }
+  ]
+}

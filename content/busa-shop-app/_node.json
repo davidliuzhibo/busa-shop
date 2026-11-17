@@ -1,0 +1,33 @@
+{
+  "type": "airapp",
+  "name": "Shop Website",
+  "description": "The public storefront (Website engine, write access): home page with the product grid, product pages, an order request form that creates one Orders row per request, sitemap.xml, robots.txt and schema.org Product data, and for AI assistants an MCP server at /mcp (search the catalog, get a prefilled buy link), /agents.md, /.well-known/ucp and a Google Merchant Center feed at /feeds/google.xml. It lists the products on sale in this folder's Products (or the table Settings › Products table names) and reads its texts from this folder's Settings. On a Free space it runs as a private preview in your own browser tab instead: the same site, as you, with no address and no Go live (going live needs Plus). Edit src/, rebuild vendor/worker.js (the deployed bundle), then Restart and Go live again.",
+  "agentPrompts": [
+    {
+      "key": "preview-site",
+      "label": "Check the members-only preview",
+      "intent": "read-only",
+      "body": "Read the `busa-shop` skill in this folder, then open the preview address of this website (opening this node starts the preview) and tell me what a visitor sees: the products listed, anything hidden and why, and whether the order form works. On a Free space the preview runs only in my browser tab and has no address: then tell me what to look at and ask me what I see. Do not place an order unless I ask."
+    },
+    {
+      "key": "change-site-text",
+      "label": "Change what the website says",
+      "body": "Read the `busa-shop` skill in this folder. If what I want to change is the store name, tagline, about text, shipping note, contact email, language or ship-to countries, change it in Settings instead (no redeploy). Only if it needs a code change, edit src/, rebuild vendor/worker.js with the command in src/worker.js, run the tests, and tell me I must click Restart and Go live again."
+    },
+    {
+      "key": "explain-go-live",
+      "label": "What happens when I click Go live?",
+      "intent": "read-only",
+      "body": "Read the `busa-shop` skill in this folder, then explain in plain words what Go live does for this website: the address, the write access it asks for and why, the key it creates in my name, and how to take the site offline again. If this space is on Free, say first that Go live needs Plus and what the private browser preview is."
+    },
+    {
+      "key": "connect-ai-assistants",
+      "label": {
+        "en": "Let AI assistants sell for me (MCP for Claude, ChatGPT)",
+        "zh-CN": "让 AI 助手帮我卖货（Agent 电商：MCP 接入 Claude、ChatGPT）"
+      },
+      "intent": "read-only",
+      "body": "Read the `busa-shop` skill in this folder and follow \"Agent commerce (AI assistants find and sell your products, Agent 电商)\": tell me my MCP address (Settings › Live site address plus /mcp; if the shop is not live yet, say what Go live needs) and the exact steps to add it to Claude or ChatGPT. Then check it with the MCP Inspector commands in that section: list the tools, search for one of my products with a country I ship to, make the buy link and open it, and tell me what a buyer would see. Change nothing in my tables."
+    }
+  ]
+}

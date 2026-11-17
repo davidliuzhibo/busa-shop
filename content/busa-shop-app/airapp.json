@@ -1,0 +1,10 @@
+{
+  "preferredEngine": "site",
+  "install": "node --version",
+  "start": "node scripts/browser-preview.mjs",
+  "site": {
+    "entry": "vendor/worker.js",
+    "assets": "public",
+    "access": "write"
+  }
+}
